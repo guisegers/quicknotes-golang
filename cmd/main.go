@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"text/template"
+
+	"github.com/joho/godotenv"
 )
 
 // NoteHandler implements http.Handler for the note list (root path).
@@ -62,7 +65,6 @@ func noteNew(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	fmt.Println("Servidor rodando na porta 8080")
 	mux := http.NewServeMux()
 
 	staticHandler := http.FileServer(http.Dir("views/static"))
@@ -72,5 +74,14 @@ func main() {
 	mux.HandleFunc("/note/view", noteView)
 	mux.HandleFunc("/note/new", noteNew)
 
-	http.ListenAndServe(":8080", mux)
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("Nenhum arquivo .env encontrado, usando variáveis de ambiente do sistema")
+	}
+	port, ok := os.LookupEnv("PORT")
+	if !ok {
+		port = "8080"
+	}
+	fmt.Printf("Servidor rodando na porta %s\n", port)
+
+	http.ListenAndServe(":"+port, mux)
 }
